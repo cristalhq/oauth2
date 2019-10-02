@@ -95,3 +95,27 @@ func (t *Token) Extra(key string) interface{} {
 		return nil
 	}
 }
+
+// Valid reports whether t is non-nil, has an AccessToken, and is not expired.
+//
+func (t *Token) Valid() bool {
+	return t != nil && t.AccessToken != "" && !t.IsExpired()
+}
+
+// timeNow is always time.Now, except tests.
+// is used only in Token.IsExpired
+var timeNow = time.Now
+
+// expiryDelta determines how earlier a token should be considered
+// expired than its actual expiration time. It is used to avoid late
+// expirations due to client-server time mismatches.
+const expiryDelta = 10 * time.Second
+
+// IsExpired reports whether the token is expired.
+//
+func (t *Token) IsExpired() bool {
+	if t.Expiry.IsZero() {
+		return false
+	}
+	return t.Expiry.Round(0).Add(-expiryDelta).Before(timeNow())
+}
