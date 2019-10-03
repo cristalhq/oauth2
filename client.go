@@ -47,6 +47,47 @@ func (c *Client) Exchange(ctx context.Context, code string) (*Token, error) {
 	}
 	return c.retrieveToken(ctx, v)
 }
+
+// CredentialsToken retrieves a token for given username and password.
+//
+func (c *Client) CredentialsToken(ctx context.Context, username, password string) (*Token, error) {
+	v := url.Values{
+		"grant_type": []string{"password"},
+		"username":   []string{username},
+		"password":   []string{password},
+	}
+
+	if len(c.config.Scopes) > 0 {
+		v.Set("scope", strings.Join(c.config.Scopes, " "))
+	}
+	return c.retrieveToken(ctx, v)
+}
+
+// Token renews a token based on previous token.
+//
+// WARNING: It's not safe for concurrent usage.
+//
+func (c *Client) Token(ctx context.Context) (*Token, error) {
+	if c.refreshToken == "" {
+		return nil, errors.New("oauth2: token expired and refresh token is not set")
+	}
+
+	v := url.Values{
+		"grant_type":    []string{"refresh_token"},
+		"refresh_token": []string{c.refreshToken},
+	}
+
+	token, err := c.retrieveToken(ctx, v)
+	if err != nil {
+		return nil, err
+	}
+
+	if c.refreshToken != token.RefreshToken {
+		c.refreshToken = token.RefreshToken
+	}
+	return token, nil
+}
+
 func (c *Client) retrieveToken(ctx context.Context, v url.Values) (*Token, error) {
 	req, err := newTokenRequest(c.config.TokenURL, c.config.ClientID, c.config.ClientSecret, v, c.config.AuthStyle)
 	if err != nil {
