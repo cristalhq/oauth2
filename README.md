@@ -1,6 +1,6 @@
 # oauth2
 
-[![Build Status][travis-img]][travis-url]
+[![Actions Status](https://github.com/cristalhq/oauth2/workflows/Go/badge.svg)](https://github.com/cristalhq/oauth2/actions)
 [![GoDoc][doc-img]][doc-url]
 [![Go Report Card][reportcard-img]][reportcard-url]
 [![Go Report Card][coverage-img]][coverage-url]
