@@ -1,6 +1,6 @@
 # oauth2
 
-[![Actions Status](https://github.com/cristalhq/oauth2/workflows/Go/badge.svg)](https://github.com/cristalhq/oauth2/actions)
+[![Build Status][build-img]][build-url]
 [![GoDoc][doc-img]][doc-url]
 [![Go Report Card][reportcard-img]][reportcard-url]
 [![Go Report Card][coverage-img]][coverage-url]
@@ -34,8 +34,8 @@ See [these docs](https://godoc.org/github.com/cristalhq/oauth2).
 
 [MIT License](LICENSE).
 
-[travis-img]: https://travis-ci.org/cristalhq/oauth2.svg?branch=master
-[travis-url]: https://travis-ci.org/cristalhq/oauth2
+[build-img]: https://github.com/cristalhq/oauth2/workflows/Go/badge.svg
+[build-url]: https://github.com/cristalhq/oauth2/actions
 [doc-img]: https://godoc.org/github.com/cristalhq/oauth2?status.svg
 [doc-url]: https://godoc.org/github.com/cristalhq/oauth2
 [reportcard-img]: https://goreportcard.com/badge/cristalhq/oauth2
