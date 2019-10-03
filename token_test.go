@@ -1,6 +1,7 @@
 package oauth2
 
 import (
+	"net/url"
 	"testing"
 	"time"
 )
@@ -93,4 +94,37 @@ func TestTokenExpiry(t *testing.T) {
 		&Token{Expiry: now.Add(-1 * time.Hour)},
 		true,
 	)
+}
+
+func TestExtraValueRetrieval(t *testing.T) {
+	kvmap := map[string]string{
+		"scope":       "user",
+		"token_type":  "bearer",
+		"expires_in":  "86400.92",
+		"server_time": "1443571905.5606415",
+		"referer_ip":  "10.0.0.1",
+		"etag":        "\"afZYj912P4alikMz_P11982\"",
+		"request_id":  "86400",
+		"untrimmed":   "  untrimmed  ",
+	}
+	values := url.Values{}
+	for key, value := range kvmap {
+		values.Set(key, value)
+	}
+
+	tok := Token{raw: values}
+
+	f := func(key string, want interface{}) {
+		value := tok.Extra(key)
+		if value != want {
+			t.Errorf("got %q; want %q", value, want)
+		}
+	}
+
+	f("scope", "user")
+	f("server_time", 1443571905.5606415)
+	f("referer_ip", "10.0.0.1")
+	f("expires_in", 86400.92)
+	f("request_id", int64(86400))
+	f("untrimmed", "  untrimmed  ")
 }
