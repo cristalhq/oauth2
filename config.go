@@ -1,5 +1,11 @@
 package oauth2
 
+import (
+	"bytes"
+	"net/url"
+	"strings"
+)
+
 // Config describes a 3-legged OAuth2 flow.
 type Config struct {
 	// ClientID is the application's ID.
@@ -41,3 +47,43 @@ const (
 	// This is an optional style described in the OAuth2 RFC 6749 section 2.3.1.
 	AuthStyleInHeader AuthStyle = 2
 )
+
+// AuthCodeURL returns a URL to OAuth 2.0 provider's consent page
+// that asks for permissions for the required scopes explicitly.
+//
+// State is a token to protect the user from CSRF attacks. You must
+// always provide a non-empty string and validate that it matches the
+// the state query parameter on your redirect callback.
+// See http://tools.ietf.org/html/rfc6749#section-10.12 for more info.
+//
+func (c *Config) AuthCodeURL(state string) string {
+	return c.AuthCodeURLWithParams(state, nil)
+}
+
+func (c *Config) AuthCodeURLWithParams(state string, vals url.Values) string {
+	var buf bytes.Buffer
+	buf.WriteString(c.AuthURL)
+
+	v := cloneURLValues(vals)
+	v.Add("response_type", "code")
+	v.Add("client_id", c.ClientID)
+
+	if c.RedirectURL != "" {
+		v.Set("redirect_uri", c.RedirectURL)
+	}
+	if len(c.Scopes) > 0 {
+		v.Set("scope", strings.Join(c.Scopes, " "))
+	}
+	if state != "" {
+		v.Set("state", state)
+	}
+
+	if strings.Contains(c.AuthURL, "?") {
+		buf.WriteByte('&')
+	} else {
+		buf.WriteByte('?')
+	}
+
+	buf.WriteString(v.Encode())
+	return buf.String()
+}
