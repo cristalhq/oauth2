@@ -20,8 +20,8 @@ type Config struct {
 	// TokenURL is a URL for retrieving a token.
 	TokenURL string
 
-	// AuthStyle represents how tokens are represented in requests.
-	AuthStyle AuthStyle
+	// Mode represents how tokens are represented in requests.
+	Mode Mode
 
 	// RedirectURL is the URL to redirect users going through
 	// the OAuth flow, after the resource owner's URLs.
@@ -31,21 +31,21 @@ type Config struct {
 	Scopes []string
 }
 
-// AuthStyle represents how requests for tokens are authenticated to the server.
-type AuthStyle int
+// Mode represents how requests for tokens are authenticated to the server.
+type Mode int
 
 const (
-	// AuthStyleAutoDetect means to auto-detect which authentication style the provider wants
+	// ModeAutoDetect means to auto-detect which authentication style the provider wants
 	// by trying both ways and caching the successful way for the future.
-	AuthStyleAutoDetect AuthStyle = 0
+	ModeAutoDetect Mode = 0
 
-	// AuthStyleInParams sends the "client_id" and "client_secret" in the POST body
+	// ModeInParams sends the "client_id" and "client_secret" in the POST body
 	// as application/x-www-form-urlencoded parameters.
-	AuthStyleInParams AuthStyle = 1
+	ModeInParams Mode = 1
 
-	// AuthStyleInHeader sends the client_id and client_password using HTTP Basic Authorization.
+	// ModeInHeader sends the client_id and client_password using HTTP Basic Authorization.
 	// This is an optional style described in the OAuth2 RFC 6749 section 2.3.1.
-	AuthStyleInHeader AuthStyle = 2
+	ModeInHeader Mode = 2
 )
 
 // AuthCodeURL returns a URL to OAuth 2.0 provider's consent page

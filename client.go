@@ -89,7 +89,7 @@ func (c *Client) Token(ctx context.Context) (*Token, error) {
 }
 
 func (c *Client) retrieveToken(ctx context.Context, v url.Values) (*Token, error) {
-	req, err := newTokenRequest(c.config.TokenURL, c.config.ClientID, c.config.ClientSecret, v, c.config.AuthStyle)
+	req, err := newTokenRequest(c.config.TokenURL, c.config.ClientID, c.config.ClientSecret, v, c.config.Mode)
 	if err != nil {
 		return nil, err
 	}
@@ -182,13 +182,13 @@ func parseJSON(body []byte) (*Token, error) {
 	return token, nil
 }
 
-func newTokenRequest(tokenURL, clientID, clientSecret string, v url.Values, authStyle AuthStyle) (*http.Request, error) {
-	needsAuthStyleProbe := authStyle == AuthStyleAutoDetect
-	if needsAuthStyleProbe {
-		authStyle = AuthStyleInHeader
+func newTokenRequest(tokenURL, clientID, clientSecret string, v url.Values, mode Mode) (*http.Request, error) {
+	modeStyleProbe := mode == ModeAutoDetect
+	if modeStyleProbe {
+		mode = ModeInHeader
 	}
 
-	if authStyle == AuthStyleInParams {
+	if mode == ModeInParams {
 		v = cloneURLValues(v)
 		if clientID != "" {
 			v.Set("client_id", clientID)
@@ -205,7 +205,7 @@ func newTokenRequest(tokenURL, clientID, clientSecret string, v url.Values, auth
 
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
-	if authStyle == AuthStyleInHeader {
+	if mode == ModeInHeader {
 		req.SetBasicAuth(url.QueryEscape(clientID), url.QueryEscape(clientSecret))
 	}
 	return req, nil
