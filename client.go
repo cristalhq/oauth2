@@ -48,6 +48,19 @@ func (c *Client) Exchange(ctx context.Context, code string) (*Token, error) {
 	return c.retrieveToken(ctx, v)
 }
 
+// ExchangeWithParams converts an authorization code into an OAuth2 token.
+//
+func (c *Client) ExchangeWithParams(ctx context.Context, code string, params url.Values) (*Token, error) {
+	vals := cloneURLValues(params)
+	vals.Add("grant_type", "authorization_code")
+	vals.Add("code", code)
+
+	if c.config.RedirectURL != "" {
+		vals.Set("redirect_uri", c.config.RedirectURL)
+	}
+	return c.retrieveToken(ctx, vals)
+}
+
 // CredentialsToken retrieves a token for given username and password.
 //
 func (c *Client) CredentialsToken(ctx context.Context, username, password string) (*Token, error) {
@@ -182,6 +195,13 @@ func parseJSON(body []byte) (*Token, error) {
 	return token, nil
 }
 
+// newTokenRequest returns a new *http.Request to retrieve a new token
+// from tokenURL using the provided clientID, clientSecret, and POST body parameters.
+//
+// inParams is whether the clientID & clientSecret should be encoded
+// as the POST body. An 'inParams' value of true means to send it in
+// the POST body (along with any values in v); false means to send it
+// in the Authorization header.
 func newTokenRequest(tokenURL, clientID, clientSecret string, v url.Values, mode Mode) (*http.Request, error) {
 	modeStyleProbe := mode == ModeAutoDetect
 	if modeStyleProbe {
