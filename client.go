@@ -30,15 +30,20 @@ func NewClient(client *http.Client, config *Config) *Client {
 // Exchange converts an authorization code into an OAuth2 token.
 //
 func (c *Client) Exchange(ctx context.Context, code string) (*Token, error) {
-	v := url.Values{
-		"grant_type": []string{"authorization_code"},
-		"code":       []string{code},
-	}
+	return c.ExchangeWithParams(ctx, code, nil)
+}
+
+// ExchangeWithParams converts an authorization code into an OAuth2 token.
+//
+func (c *Client) ExchangeWithParams(ctx context.Context, code string, params url.Values) (*Token, error) {
+	vals := cloneURLValues(params)
+	vals.Add("grant_type", "authorization_code")
+	vals.Add("code", code)
 
 	if c.config.RedirectURL != "" {
-		v.Set("redirect_uri", c.config.RedirectURL)
+		vals.Set("redirect_uri", c.config.RedirectURL)
 	}
-	return c.retrieveToken(ctx, v)
+	return c.retrieveToken(ctx, vals)
 }
 
 // CredentialsToken retrieves a token for given username and password.
