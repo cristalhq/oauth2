@@ -3,7 +3,7 @@
 [![Build Status][build-img]][build-url]
 [![GoDoc][doc-img]][doc-url]
 [![Go Report Card][reportcard-img]][reportcard-url]
-[![Go Report Card][coverage-img]][coverage-url]
+[![Coverage][coverage-img]][coverage-url]
 
 OAuth2 client in Go.
 
@@ -64,5 +64,5 @@ See [these docs](https://godoc.org/github.com/cristalhq/oauth2).
 [doc-url]: https://godoc.org/github.com/cristalhq/oauth2
 [reportcard-img]: https://goreportcard.com/badge/cristalhq/oauth2
 [reportcard-url]: https://goreportcard.com/report/cristalhq/oauth2
-[coverage-img]: https://coveralls.io/repos/github/cristalhq/oauth2/badge.svg?branch=master
-[coverage-url]: https://coveralls.io/github/cristalhq/oauth2?branch=master
+[coverage-img]: https://codecov.io/gh/cristalhq/oauth2/branch/master/graph/badge.svg
+[coverage-url]: https://codecov.io/gh/cristalhq/oauth2
