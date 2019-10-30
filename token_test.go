@@ -8,6 +8,8 @@ import (
 
 func TestTokenTypeMethod(t *testing.T) {
 	f := func(token *Token, want string) {
+		t.Helper()
+
 		got := token.Type()
 		if got != want {
 			t.Errorf("got %v; want %v", got, want)
@@ -47,6 +49,8 @@ func TestTokenExtra(t *testing.T) {
 	const wantKey = "extra-key"
 
 	f := func(key string, value, want interface{}) {
+		t.Helper()
+
 		extra := map[string]interface{}{
 			key: value,
 		}
@@ -72,6 +76,8 @@ func TestTokenExpiry(t *testing.T) {
 	defer func() { timeNow = time.Now }()
 
 	f := func(token *Token, want bool) {
+		t.Helper()
+
 		got := token.IsExpired()
 		if got != want {
 			t.Errorf("got %v; want %v", got, want)
@@ -115,6 +121,8 @@ func TestExtraValueRetrieval(t *testing.T) {
 	tok := Token{Raw: values}
 
 	f := func(key string, want interface{}) {
+		t.Helper()
+
 		value := tok.Extra(key)
 		if value != want {
 			t.Errorf("got %q; want %q", value, want)
