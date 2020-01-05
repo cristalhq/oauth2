@@ -1,4 +1,4 @@
-name: Go
+name: build
 on: [push]
 jobs:
 
@@ -25,4 +25,10 @@ jobs:
       run: go build .
 
     - name: Test
-      run: go test -v .
+      run: go test -v -coverprofile=coverage.txt .
+
+    - name: Upload Coverage
+      uses: codecov/codecov-action@v1.0.3
+      with:
+        token: ${{secrets.CODECOV_TOKEN}} 
+        file: ./coverage.txt
