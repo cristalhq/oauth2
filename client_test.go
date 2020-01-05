@@ -189,18 +189,21 @@ func TestRetrieveToken_InParams(t *testing.T) {
 
 func TestRetrieveToken_InHeaderMode(t *testing.T) {
 	const clientID = "client-id"
-	ts := newServer(func(w http.ResponseWriter, r *http.Request) {
-		// got := r.Header.Get("Authorization")
-		// want := clientID
-		// if got != want {
-		// 	t.Errorf("client_id = %q; want %q", got, want)
-		// }
+	const clientSecret = "client-secret"
 
-		got := r.Header.Get("Authorization")
-		want := "Q0xJRU5UX0lEJTNGJTNGOkNMSUVOVF9TRUNSRVQlM0YlM0Y="
-		if got != want {
-			t.Errorf("client_secret = %q; want empty", got)
+	ts := newServer(func(w http.ResponseWriter, r *http.Request) {
+		user, pass, ok := r.BasicAuth()
+		if !ok {
+			t.Error("expected with HTTP Basic Authentication")
 		}
+
+		if user != clientID {
+			t.Errorf("client_id = %q; want %q", user, clientID)
+		}
+		if pass != clientSecret {
+			t.Errorf("client_secret = %q; want %q", pass, clientSecret)
+		}
+
 		w.Header().Set("Content-Type", "application/json")
 		_, _ = io.WriteString(w, `{"access_token": "ACCESS_TOKEN", "token_type": "bearer"}`)
 	})
@@ -208,7 +211,7 @@ func TestRetrieveToken_InHeaderMode(t *testing.T) {
 
 	cfg := &Config{
 		ClientID:     clientID,
-		ClientSecret: "",
+		ClientSecret: clientSecret,
 		TokenURL:     ts.URL,
 		Mode:         InHeaderMode,
 	}
