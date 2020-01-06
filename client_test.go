@@ -181,7 +181,7 @@ func TestRetrieveToken_InParams(t *testing.T) {
 	}
 	client := NewClient(http.DefaultClient, cfg)
 
-	_, err := client.retrieveToken(context.Background(), nil)
+	_, err := client.Exchange(context.Background(), "nil")
 	if err != nil {
 		t.Errorf("RetrieveToken = %v; want no error", err)
 	}
@@ -217,7 +217,44 @@ func TestRetrieveToken_InHeaderMode(t *testing.T) {
 	}
 	client := NewClient(http.DefaultClient, cfg)
 
-	_, err := client.retrieveToken(context.Background(), nil)
+	_, err := client.Exchange(context.Background(), "nil")
+	if err != nil {
+		t.Errorf("RetrieveToken = %v; want no error", err)
+	}
+}
+
+func TestRetrieveToken_AutoDetect(t *testing.T) {
+	const clientID = "client-id"
+	const clientSecret = "client-secret"
+
+	ts := newServer(func(w http.ResponseWriter, r *http.Request) {
+		got := r.FormValue("client_id")
+		want := clientID
+		if got != want {
+			w.WriteHeader(500)
+			_, _ = io.WriteString(w, `{"access_token": "ACCESS_TOKEN", "token_type": "bearer"}`)
+			return
+		}
+
+		got = r.FormValue("client_secret")
+		want = clientSecret
+		if got != want {
+			t.Errorf("client_secret = %q; want empty", got)
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = io.WriteString(w, `{"access_token": "ACCESS_TOKEN", "token_type": "bearer"}`)
+	})
+	defer ts.Close()
+
+	cfg := Config{
+		ClientID:     clientID,
+		ClientSecret: clientSecret,
+		TokenURL:     ts.URL,
+		Mode:         AutoDetectMode,
+	}
+	client := NewClient(http.DefaultClient, cfg)
+
+	_, err := client.Exchange(context.Background(), "test")
 	if err != nil {
 		t.Errorf("RetrieveToken = %v; want no error", err)
 	}
