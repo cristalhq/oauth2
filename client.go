@@ -1,6 +1,7 @@
 package oauth2
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"net/http"
@@ -12,19 +13,64 @@ import (
 //
 type Client struct {
 	client *http.Client
-	config *Config
+	config Config
 
 	refreshToken string
 }
 
 // NewClient instantiates a new client with a given config.
 //
-func NewClient(client *http.Client, config *Config) *Client {
+func NewClient(client *http.Client, config Config) *Client {
 	c := &Client{
 		client: client,
 		config: config,
 	}
 	return c
+}
+
+// AuthCodeURL returns a URL to OAuth 2.0 provider's consent page
+// that asks for permissions for the required scopes explicitly.
+//
+// State is a token to protect the user from CSRF attacks.
+//
+// You must always provide a non-empty string and validate that it matches the
+// the state query parameter on your redirect callback.
+//
+// See http://tools.ietf.org/html/rfc6749#section-10.12 for more info.
+//
+func (c *Client) AuthCodeURL(state string) string {
+	return c.AuthCodeURLWithParams(state, nil)
+}
+
+// AuthCodeURLWithParams same as AuthCodeURL but allows to pass additional URL parameters.
+//
+func (c *Client) AuthCodeURLWithParams(state string, vals url.Values) string {
+	// TODO(cristaloleg): can be set once (except state).
+	v := cloneURLValues(vals)
+	v.Add("response_type", "code")
+	v.Add("client_id", c.config.ClientID)
+
+	if c.config.RedirectURL != "" {
+		v.Set("redirect_uri", c.config.RedirectURL)
+	}
+	if len(c.config.Scopes) > 0 {
+		v.Set("scope", strings.Join(c.config.Scopes, " "))
+	}
+	if state != "" {
+		v.Set("state", state)
+	}
+
+	var buf bytes.Buffer
+	buf.WriteString(c.config.AuthURL)
+
+	if strings.Contains(c.config.AuthURL, "?") {
+		buf.WriteByte('&')
+	} else {
+		buf.WriteByte('?')
+	}
+
+	buf.WriteString(v.Encode())
+	return buf.String()
 }
 
 // Exchange converts an authorization code into an OAuth2 token.

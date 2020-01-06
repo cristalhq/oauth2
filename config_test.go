@@ -1,22 +1,23 @@
 package oauth2
 
 import (
+	"net/http"
 	"net/url"
 	"testing"
 )
 
 func TestAuthCodeURL(t *testing.T) {
-	f := func(cfg *Config, state string, want string) {
-		t.Helper()
+	f := func(cfg Config, state string, want string) {
+		client := NewClient(http.DefaultClient, cfg)
 
-		url := cfg.AuthCodeURL(state)
+		url := client.AuthCodeURL(state)
 		if url != want {
 			t.Errorf("got %q; want %q", url, want)
 		}
 	}
 
 	f(
-		&Config{
+		Config{
 			ClientID:     "CLIENT_ID",
 			ClientSecret: "CLIENT_SECRET",
 			RedirectURL:  "REDIRECT_URL",
@@ -29,7 +30,7 @@ func TestAuthCodeURL(t *testing.T) {
 	)
 
 	f(
-		&Config{
+		Config{
 			ClientID:     "CLIENT_ID",
 			ClientSecret: "CLIENT_SECRET",
 			RedirectURL:  "REDIRECT_URL",
@@ -42,7 +43,7 @@ func TestAuthCodeURL(t *testing.T) {
 	)
 
 	f(
-		&Config{
+		Config{
 			ClientID:     "CLIENT_ID",
 			ClientSecret: "CLIENT_SECRET",
 			RedirectURL:  "REDIRECT_URL",
@@ -55,7 +56,7 @@ func TestAuthCodeURL(t *testing.T) {
 	)
 
 	f(
-		&Config{
+		Config{
 			ClientID: "CLIENT_ID",
 			AuthURL:  "server:1234/auth-url",
 			TokenURL: "server:1234/token-url",
@@ -66,17 +67,17 @@ func TestAuthCodeURL(t *testing.T) {
 }
 
 func AuthCodeURLWithParams(t *testing.T) {
-	f := func(cfg *Config, state string, params url.Values, want string) {
-		t.Helper()
+	f := func(cfg Config, state string, params url.Values, want string) {
+		client := NewClient(http.DefaultClient, cfg)
 
-		url := cfg.AuthCodeURLWithParams(state, params)
+		url := client.AuthCodeURLWithParams(state, params)
 		if url != want {
 			t.Errorf("got %q; want %q", url, want)
 		}
 	}
 
 	f(
-		&Config{
+		Config{
 			ClientID:     "CLIENT_ID",
 			ClientSecret: "CLIENT_SECRET",
 			RedirectURL:  "REDIRECT_URL",
@@ -90,7 +91,7 @@ func AuthCodeURLWithParams(t *testing.T) {
 	)
 
 	f(
-		&Config{
+		Config{
 			ClientID:     "CLIENT_ID",
 			ClientSecret: "CLIENT_SECRET",
 			RedirectURL:  "REDIRECT_URL",
@@ -104,7 +105,7 @@ func AuthCodeURLWithParams(t *testing.T) {
 	)
 
 	f(
-		&Config{
+		Config{
 			ClientID:     "CLIENT_ID",
 			ClientSecret: "CLIENT_SECRET",
 			RedirectURL:  "REDIRECT_URL",
@@ -121,7 +122,7 @@ func AuthCodeURLWithParams(t *testing.T) {
 	)
 
 	f(
-		&Config{
+		Config{
 			ClientID: "CLIENT_ID",
 			AuthURL:  "server:1234/auth-url",
 			TokenURL: "server:1234/token-url",

@@ -11,7 +11,7 @@ import (
 )
 
 func ExampleClientAndConfig() {
-	cfg := &oauth2.Config{
+	config := oauth2.Config{
 		ClientID:     "YOUR_CLIENT_ID",
 		ClientSecret: "YOUR_CLIENT_SECRET",
 		AuthURL:      "https://provider.com/o/oauth2/auth",
@@ -19,8 +19,11 @@ func ExampleClientAndConfig() {
 		Scopes:       []string{"email", "avatar"},
 	}
 
+	// create a client
+	client := oauth2.NewClient(http.DefaultClient, config)
+
 	// url to fetch the code
-	url := cfg.AuthCodeURL("state")
+	url := client.AuthCodeURL("state")
 	fmt.Printf("Visit the URL for the auth dialog: %v", url)
 
 	// Use the authorization code that is pushed to the redirect URL.
@@ -29,9 +32,6 @@ func ExampleClientAndConfig() {
 	if _, err := fmt.Scan(&code); err != nil {
 		log.Fatal(err)
 	}
-
-	// create a client
-	client := oauth2.NewClient(http.DefaultClient, cfg)
 
 	// get a token
 	token, err := client.Exchange(context.Background(), code)

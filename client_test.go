@@ -86,7 +86,7 @@ func TestClientExchangeWithParams(t *testing.T) {
 	})
 	defer ts.Close()
 
-	cfg := &Config{
+	cfg := Config{
 		ClientID:     "CLIENT_ID??",
 		ClientSecret: "CLIENT_SECRET??",
 		RedirectURL:  "REDIRECT_URL",
@@ -173,7 +173,7 @@ func TestRetrieveToken_InParams(t *testing.T) {
 	})
 	defer ts.Close()
 
-	cfg := &Config{
+	cfg := Config{
 		ClientID:     clientID,
 		ClientSecret: "",
 		TokenURL:     ts.URL,
@@ -209,7 +209,7 @@ func TestRetrieveToken_InHeaderMode(t *testing.T) {
 	})
 	defer ts.Close()
 
-	cfg := &Config{
+	cfg := Config{
 		ClientID:     clientID,
 		ClientSecret: clientSecret,
 		TokenURL:     ts.URL,
@@ -581,7 +581,7 @@ func TestRetrieveTokenWithContexts(t *testing.T) {
 	})
 	defer ts.Close()
 
-	cfg := &Config{
+	cfg := Config{
 		ClientID:     clientID,
 		ClientSecret: "",
 		TokenURL:     ts.URL,
@@ -599,7 +599,7 @@ func TestRetrieveTokenWithContexts(t *testing.T) {
 	})
 	defer cancellingts.Close()
 
-	cfg = &Config{
+	cfg = Config{
 		ClientID:     clientID,
 		ClientSecret: "",
 		TokenURL:     ts.URL,
@@ -617,7 +617,7 @@ func TestRetrieveTokenWithContexts(t *testing.T) {
 }
 
 func newClient(url string) *Client {
-	cfg := &Config{
+	cfg := Config{
 		ClientID:     "CLIENT_ID",
 		ClientSecret: "CLIENT_SECRET",
 		AuthURL:      url + "/auth",
