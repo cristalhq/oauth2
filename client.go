@@ -140,35 +140,37 @@ func (c *Client) retrieveToken(ctx context.Context, vals url.Values) (*Token, er
 		mode = InHeaderMode
 	}
 
+	token, err := c.makeRequest(ctx, mode, vals)
+	if err == nil {
+		return token, nil
+	}
+	if !shouldGuessAuthMode {
+		return nil, err
+	}
+	mode = InParamsMode
+
+	token, err = c.makeRequest(ctx, mode, vals)
+	if err != nil {
+		return nil, err
+	}
+	c.config.Mode = mode
+	return token, nil
+}
+
+func (c *Client) makeRequest(ctx context.Context, mode Mode, vals url.Values) (*Token, error) {
 	req, err := c.newTokenRequest(mode, vals)
 	if err != nil {
 		return nil, err
 	}
-
-	resp, err := c.sendRequest(ctx, req)
+	resp, err := c.client.Do(req.WithContext(ctx))
 	if err != nil {
-		if !shouldGuessAuthMode {
-			return nil, err
-		}
-		mode = InParamsMode
-
-		var err error
-		req, err = c.newTokenRequest(mode, vals)
-		if err != nil {
-			return nil, err
-		}
-
-		resp, err = c.sendRequest(ctx, req)
-		if err != nil {
-			return nil, err
-		}
-		c.config.Mode = mode
+		return nil, err
 	}
-	return parseResponse(resp)
-}
-
-func (c *Client) sendRequest(ctx context.Context, req *http.Request) (*http.Response, error) {
-	return c.client.Do(req.WithContext(ctx))
+	token, err := parseResponse(resp)
+	if err != nil {
+		return nil, err
+	}
+	return token, nil
 }
 
 func (c *Client) newTokenRequest(mode Mode, v url.Values) (*http.Request, error) {
