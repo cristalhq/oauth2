@@ -24,7 +24,7 @@ go get github.com/cristalhq/oauth2
 ## Example
 
 ```go
-cfg := &oauth2.Config{
+config := oauth2.Config{
     ClientID:     "YOUR_CLIENT_ID",
     ClientSecret: "YOUR_CLIENT_SECRET",
     AuthURL:      "https://provider.com/o/oauth2/auth",
@@ -32,22 +32,31 @@ cfg := &oauth2.Config{
     Scopes:       []string{"email", "avatar"},
 }
 
-url := cfg.AuthCodeURL("state") // url to fetch the code
-
-var code string // from given by the provider 
-
 // create a client
-client := oauth2.NewClient(http.DefaultClient, cfg)
+client := oauth2.NewClient(http.DefaultClient, config)
+
+// url to fetch the code
+url := client.AuthCodeURL("state")
+fmt.Printf("Visit the URL for the auth dialog: %v", url)
+
+// Use the authorization code that is pushed to the redirect URL.
+// Exchange will do the handshake to retrieve the initial access token.
+var code string
+if _, err := fmt.Scan(&code); err != nil {
+    log.Fatal(err)
+}
 
 // get a token
-token, err := client.Exchange(context.Background(), code) 
+token, err := client.Exchange(context.Background(), code)
 if err != nil {
-    ...
+    panic(err)
 }
 
 var _ string = token.AccessToken  // OAuth2 token
 var _ string = token.TokenType    // type of the token
 var _ string = token.RefreshToken // token for a refresh
+var _ time.Time = token.Expiry    // token expiration time
+var _ bool = token.IsExpired()    // have token expired?
 ```
 
 ## Documentation
