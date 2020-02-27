@@ -95,16 +95,16 @@ func (c *Client) ExchangeWithParams(ctx context.Context, code string, params url
 // CredentialsToken retrieves a token for given username and password.
 //
 func (c *Client) CredentialsToken(ctx context.Context, username, password string) (*Token, error) {
-	v := url.Values{
+	vals := url.Values{
 		"grant_type": []string{"password"},
 		"username":   []string{username},
 		"password":   []string{password},
 	}
 
 	if len(c.config.Scopes) > 0 {
-		v.Set("scope", strings.Join(c.config.Scopes, " "))
+		vals.Set("scope", strings.Join(c.config.Scopes, " "))
 	}
-	return c.retrieveToken(ctx, v)
+	return c.retrieveToken(ctx, vals)
 }
 
 // Token renews a token based on previous token.
