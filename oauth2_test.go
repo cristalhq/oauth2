@@ -23,7 +23,7 @@ func TestAuthCodeURL(t *testing.T) {
 			RedirectURL:  "REDIRECT_URL",
 			Scopes:       nil,
 			AuthURL:      "server:1234/auth",
-			TokenURL:     "server:1234/token",
+			TokenURL:     "",
 		},
 		"test-state",
 		`server:1234/auth?client_id=CLIENT_ID&redirect_uri=REDIRECT_URL&response_type=code&state=test-state`,
@@ -36,7 +36,7 @@ func TestAuthCodeURL(t *testing.T) {
 			RedirectURL:  "REDIRECT_URL",
 			Scopes:       nil,
 			AuthURL:      "server:1234/auth?foo=bar",
-			TokenURL:     "server:1234/token",
+			TokenURL:     "",
 		},
 		"test-state",
 		`server:1234/auth?foo=bar&client_id=CLIENT_ID&redirect_uri=REDIRECT_URL&response_type=code&state=test-state`,
@@ -49,7 +49,7 @@ func TestAuthCodeURL(t *testing.T) {
 			RedirectURL:  "REDIRECT_URL",
 			Scopes:       []string{"scope1", "scope2"},
 			AuthURL:      "server:1234/auth",
-			TokenURL:     "server:1234/token",
+			TokenURL:     "",
 		},
 		"test-state",
 		`server:1234/auth?client_id=CLIENT_ID&redirect_uri=REDIRECT_URL&response_type=code&scope=scope1+scope2&state=test-state`,
@@ -59,14 +59,14 @@ func TestAuthCodeURL(t *testing.T) {
 		Config{
 			ClientID: "CLIENT_ID",
 			AuthURL:  "server:1234/auth-url",
-			TokenURL: "server:1234/token-url",
+			TokenURL: "",
 		},
 		"",
 		`server:1234/auth-url?client_id=CLIENT_ID&response_type=code`,
 	)
 }
 
-func AuthCodeURLWithParams(t *testing.T) {
+func TestAuthCodeURLWithParams(t *testing.T) {
 	f := func(cfg Config, state string, params url.Values, want string) {
 		client := NewClient(http.DefaultClient, cfg)
 
@@ -83,7 +83,7 @@ func AuthCodeURLWithParams(t *testing.T) {
 			RedirectURL:  "REDIRECT_URL",
 			Scopes:       nil,
 			AuthURL:      "server:1234/auth",
-			TokenURL:     "server:1234/token",
+			TokenURL:     "",
 		},
 		"test-state",
 		nil,
@@ -97,7 +97,7 @@ func AuthCodeURLWithParams(t *testing.T) {
 			RedirectURL:  "REDIRECT_URL",
 			Scopes:       nil,
 			AuthURL:      "server:1234/auth?foo=bar",
-			TokenURL:     "server:1234/token",
+			TokenURL:     "",
 		},
 		"test-state",
 		nil,
@@ -111,7 +111,7 @@ func AuthCodeURLWithParams(t *testing.T) {
 			RedirectURL:  "REDIRECT_URL",
 			Scopes:       []string{"scope1", "scope2"},
 			AuthURL:      "server:1234/auth",
-			TokenURL:     "server:1234/token",
+			TokenURL:     "",
 		},
 		"test-state",
 		url.Values{
@@ -125,7 +125,7 @@ func AuthCodeURLWithParams(t *testing.T) {
 		Config{
 			ClientID: "CLIENT_ID",
 			AuthURL:  "server:1234/auth-url",
-			TokenURL: "server:1234/token-url",
+			TokenURL: "",
 		},
 		"",
 		nil,
