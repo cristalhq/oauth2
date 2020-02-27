@@ -14,8 +14,6 @@ import (
 type Client struct {
 	client *http.Client
 	config Config
-
-	refreshToken string
 }
 
 // NewClient instantiates a new client with a given config.
@@ -109,27 +107,17 @@ func (c *Client) CredentialsToken(ctx context.Context, username, password string
 
 // Token renews a token based on previous token.
 //
-// WARNING: It's not safe for concurrent usage.
-//
-func (c *Client) Token(ctx context.Context) (*Token, error) {
-	if c.refreshToken == "" {
-		return nil, errors.New("oauth2: token expired and refresh token is not set")
+func (c *Client) Token(ctx context.Context, refreshToken string) (*Token, error) {
+	if refreshToken == "" {
+		return nil, errors.New("oauth2: refresh token is not set")
 	}
 
-	v := url.Values{
+	vals := url.Values{
 		"grant_type":    []string{"refresh_token"},
-		"refresh_token": []string{c.refreshToken},
+		"refresh_token": []string{refreshToken},
 	}
 
-	token, err := c.retrieveToken(ctx, v)
-	if err != nil {
-		return nil, err
-	}
-
-	if c.refreshToken != token.RefreshToken {
-		c.refreshToken = token.RefreshToken
-	}
-	return token, nil
+	return c.retrieveToken(ctx, vals)
 }
 
 func (c *Client) retrieveToken(ctx context.Context, vals url.Values) (*Token, error) {
