@@ -34,16 +34,6 @@ func (t *Token) Type() string {
 	}
 }
 
-// SetExtra returns a new Token that's a clone of t, but using the
-// provided raw extra map. This is only intended for use by packages
-// implementing derivative OAuth2 flows.
-func (t *Token) SetExtra(extra interface{}) *Token {
-	t2 := new(Token)
-	*t2 = *t
-	t2.Raw = extra
-	return t2
-}
-
 // Extra returns an extra field.
 // Extra fields are key-value pairs returned by the server as a
 // part of the token retrieval response.
