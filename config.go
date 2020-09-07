@@ -48,8 +48,8 @@ func (c *Config) AuthCodeURL(state string) string {
 }
 
 // AuthCodeURLWithParams same as AuthCodeURL but allows to pass additional URL parameters.
-func (c *Config) AuthCodeURLWithParams(state string, vals url.Values) string {
-	v := cloneURLValues(vals)
+func (c *Config) AuthCodeURLWithParams(state string, params url.Values) string {
+	v := cloneURLValues(params)
 	v.Add("response_type", "code")
 	v.Add("client_id", c.ClientID)
 

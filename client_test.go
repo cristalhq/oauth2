@@ -86,15 +86,14 @@ func TestClientExchangeWithParams(t *testing.T) {
 	})
 	defer ts.Close()
 
-	cfg := &Config{
+	client := newClientWithConfig(&Config{
 		ClientID:     "CLIENT_ID??",
 		ClientSecret: "CLIENT_SECRET??",
 		RedirectURL:  "REDIRECT_URL",
 		Scopes:       nil,
 		AuthURL:      ts.URL + "/auth",
 		TokenURL:     ts.URL + "/token",
-	}
-	client := NewClient(http.DefaultClient, cfg)
+	})
 
 	_, err := client.ExchangeWithParams(context.Background(), "exchange-code", url.Values{"foo": {"bar"}})
 	if err != nil {
@@ -173,13 +172,12 @@ func TestRetrieveToken_InParams(t *testing.T) {
 	})
 	defer ts.Close()
 
-	cfg := &Config{
+	client := newClientWithConfig(&Config{
 		ClientID:     clientID,
 		ClientSecret: "",
 		TokenURL:     ts.URL,
 		Mode:         InParamsMode,
-	}
-	client := NewClient(http.DefaultClient, cfg)
+	})
 
 	_, err := client.retrieveToken(context.Background(), nil)
 	if err != nil {
@@ -206,13 +204,12 @@ func TestRetrieveToken_InHeaderMode(t *testing.T) {
 	})
 	defer ts.Close()
 
-	cfg := &Config{
+	client := newClientWithConfig(&Config{
 		ClientID:     clientID,
 		ClientSecret: "",
 		TokenURL:     ts.URL,
 		Mode:         InHeaderMode,
-	}
-	client := NewClient(http.DefaultClient, cfg)
+	})
 
 	_, err := client.retrieveToken(context.Background(), nil)
 	if err != nil {
@@ -578,13 +575,13 @@ func TestRetrieveTokenWithContexts(t *testing.T) {
 	})
 	defer ts.Close()
 
-	cfg := &Config{
+	client := newClientWithConfig(&Config{
 		ClientID:     clientID,
 		ClientSecret: "",
 		TokenURL:     ts.URL,
 		Mode:         AutoDetectMode,
-	}
-	client := NewClient(http.DefaultClient, cfg)
+	})
+
 	_, err := client.retrieveToken(context.Background(), url.Values{})
 	if err != nil {
 		t.Errorf("RetrieveToken (with background context) = %v; want no error", err)
@@ -596,13 +593,12 @@ func TestRetrieveTokenWithContexts(t *testing.T) {
 	})
 	defer cancellingts.Close()
 
-	cfg = &Config{
+	client = newClientWithConfig(&Config{
 		ClientID:     clientID,
 		ClientSecret: "",
 		TokenURL:     ts.URL,
 		Mode:         InParamsMode,
-	}
-	client = NewClient(http.DefaultClient, cfg)
+	})
 
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
@@ -623,6 +619,10 @@ func newClient(url string) *Client {
 		RedirectURL:  "REDIRECT_URL",
 		Scopes:       []string{"scope1", "scope2"},
 	}
+	return NewClient(http.DefaultClient, cfg)
+}
+
+func newClientWithConfig(cfg *Config) *Client {
 	return NewClient(http.DefaultClient, cfg)
 }
 
