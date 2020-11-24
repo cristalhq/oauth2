@@ -1,9 +1,9 @@
 # oauth2
 
-[![Build Status][build-img]][build-url]
-[![GoDoc][doc-img]][doc-url]
-[![Go Report Card][reportcard-img]][reportcard-url]
-[![Coverage][coverage-img]][coverage-url]
+[![build-img]][build-url]
+[![pkg-img]][pkg-url]
+[![reportcard-img]][reportcard-url]
+[![coverage-img]][coverage-url]
 
 OAuth2 client in Go.
 
@@ -61,7 +61,7 @@ var _ bool = token.IsExpired()    // have token expired?
 
 ## Documentation
 
-See [these docs](https://godoc.org/github.com/cristalhq/oauth2).
+See [these docs][pkg-url].
 
 ## License
 
@@ -69,8 +69,8 @@ See [these docs](https://godoc.org/github.com/cristalhq/oauth2).
 
 [build-img]: https://github.com/cristalhq/oauth2/workflows/build/badge.svg
 [build-url]: https://github.com/cristalhq/oauth2/actions
-[doc-img]: https://godoc.org/github.com/cristalhq/oauth2?status.svg
-[doc-url]: https://godoc.org/github.com/cristalhq/oauth2
+[pkg-img]: https://pkg.go.dev/badge/cristalhq/oauth2
+[pkg-url]: https://pkg.go.dev/github.com/cristalhq/oauth2
 [reportcard-img]: https://goreportcard.com/badge/cristalhq/oauth2
 [reportcard-url]: https://goreportcard.com/report/cristalhq/oauth2
 [coverage-img]: https://codecov.io/gh/cristalhq/oauth2/branch/master/graph/badge.svg
