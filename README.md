@@ -4,6 +4,7 @@
 [![pkg-img]][pkg-url]
 [![reportcard-img]][reportcard-url]
 [![coverage-img]][coverage-url]
+[![version-img]][version-url]
 
 OAuth2 client in Go.
 
@@ -13,9 +14,11 @@ OAuth2 client in Go.
 * Tiny codebase.
 * Dependency-free.
 
+See [GUIDE.md](https://github.com/cristalhq/oauth2/blob/main/GUIDE.md) for more details.
+
 ## Install
 
-Go version 1.13
+Go version 1.17
 
 ```
 go get github.com/cristalhq/oauth2
@@ -75,3 +78,5 @@ See [these docs][pkg-url].
 [reportcard-url]: https://goreportcard.com/report/cristalhq/oauth2
 [coverage-img]: https://codecov.io/gh/cristalhq/oauth2/branch/master/graph/badge.svg
 [coverage-url]: https://codecov.io/gh/cristalhq/oauth2
+[version-img]: https://img.shields.io/github/v/release/cristalhq/oauth2
+[version-url]: https://github.com/cristalhq/oauth2/releases

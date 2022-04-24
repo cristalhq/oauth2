@@ -14,8 +14,8 @@ func ExampleClientAndConfig() {
 	config := oauth2.Config{
 		ClientID:     "YOUR_CLIENT_ID",
 		ClientSecret: "YOUR_CLIENT_SECRET",
-		AuthURL:      "https://provider.com/o/oauth2/auth",
-		TokenURL:     "https://provider.com/o/oauth2/token",
+		AuthURL:      "https://example.com/o/oauth2/auth",
+		TokenURL:     "https://example.com/o/oauth2/token",
 		Scopes:       []string{"email", "avatar"},
 	}
 

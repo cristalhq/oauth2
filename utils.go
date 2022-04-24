@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"math"
 	"mime"
 	"net/http"
@@ -27,7 +26,7 @@ func cloneURLValues(vals url.Values) url.Values {
 }
 
 func parseResponse(resp *http.Response) (*Token, error) {
-	body, err := ioutil.ReadAll(io.LimitReader(resp.Body, 1<<20))
+	body, err := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
 	resp.Body.Close()
 
 	if err != nil {

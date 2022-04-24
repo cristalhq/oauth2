@@ -387,7 +387,7 @@ func TestExchangeRequest_JSONResponse_Expiry(t *testing.T) {
 		true, false,
 	)
 	f(
-		fmt.Sprintf(`"expires_in": null`),
+		`"expires_in": null`,
 		true, true,
 	)
 	f(

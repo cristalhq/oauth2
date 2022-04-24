@@ -35,13 +35,11 @@ func NewClient(client *http.Client, config Config) *Client {
 // the state query parameter on your redirect callback.
 //
 // See http://tools.ietf.org/html/rfc6749#section-10.12 for more info.
-//
 func (c *Client) AuthCodeURL(state string) string {
 	return c.AuthCodeURLWithParams(state, nil)
 }
 
 // AuthCodeURLWithParams same as AuthCodeURL but allows to pass additional URL parameters.
-//
 func (c *Client) AuthCodeURLWithParams(state string, vals url.Values) string {
 	// TODO(cristaloleg): can be set once (except state).
 	v := cloneURLValues(vals)
@@ -72,13 +70,11 @@ func (c *Client) AuthCodeURLWithParams(state string, vals url.Values) string {
 }
 
 // Exchange converts an authorization code into an OAuth2 token.
-//
 func (c *Client) Exchange(ctx context.Context, code string) (*Token, error) {
 	return c.ExchangeWithParams(ctx, code, nil)
 }
 
 // ExchangeWithParams converts an authorization code into an OAuth2 token.
-//
 func (c *Client) ExchangeWithParams(ctx context.Context, code string, params url.Values) (*Token, error) {
 	vals := cloneURLValues(params)
 	vals.Add("grant_type", "authorization_code")
@@ -91,7 +87,6 @@ func (c *Client) ExchangeWithParams(ctx context.Context, code string, params url
 }
 
 // CredentialsToken retrieves a token for given username and password.
-//
 func (c *Client) CredentialsToken(ctx context.Context, username, password string) (*Token, error) {
 	vals := url.Values{
 		"grant_type": []string{"password"},
@@ -106,7 +101,6 @@ func (c *Client) CredentialsToken(ctx context.Context, username, password string
 }
 
 // Token renews a token based on previous token.
-//
 func (c *Client) Token(ctx context.Context, refreshToken string) (*Token, error) {
 	if refreshToken == "" {
 		return nil, errors.New("oauth2: refresh token is not set")
@@ -116,7 +110,6 @@ func (c *Client) Token(ctx context.Context, refreshToken string) (*Token, error)
 		"grant_type":    []string{"refresh_token"},
 		"refresh_token": []string{refreshToken},
 	}
-
 	return c.retrieveToken(ctx, vals)
 }
 
@@ -128,8 +121,9 @@ func (c *Client) retrieveToken(ctx context.Context, vals url.Values) (*Token, er
 		mode = InHeaderMode
 	}
 
-	token, err := c.makeRequest(ctx, mode, vals)
+	token, err := c.doRequest(ctx, mode, vals)
 	if err == nil {
+		c.config.Mode = mode
 		return token, nil
 	}
 	if !shouldGuessAuthMode {
@@ -137,7 +131,7 @@ func (c *Client) retrieveToken(ctx context.Context, vals url.Values) (*Token, er
 	}
 	mode = InParamsMode
 
-	token, err = c.makeRequest(ctx, mode, vals)
+	token, err = c.doRequest(ctx, mode, vals)
 	if err != nil {
 		return nil, err
 	}
@@ -145,12 +139,12 @@ func (c *Client) retrieveToken(ctx context.Context, vals url.Values) (*Token, er
 	return token, nil
 }
 
-func (c *Client) makeRequest(ctx context.Context, mode Mode, vals url.Values) (*Token, error) {
-	req, err := c.newTokenRequest(mode, vals)
+func (c *Client) doRequest(ctx context.Context, mode Mode, vals url.Values) (*Token, error) {
+	req, err := c.newTokenRequest(ctx, mode, vals)
 	if err != nil {
 		return nil, err
 	}
-	resp, err := c.client.Do(req.WithContext(ctx))
+	resp, err := c.client.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -161,7 +155,7 @@ func (c *Client) makeRequest(ctx context.Context, mode Mode, vals url.Values) (*
 	return token, nil
 }
 
-func (c *Client) newTokenRequest(mode Mode, v url.Values) (*http.Request, error) {
+func (c *Client) newTokenRequest(ctx context.Context, mode Mode, v url.Values) (*http.Request, error) {
 	clientID, clientSecret := c.config.ClientID, c.config.ClientSecret
 
 	if mode == InParamsMode {
@@ -174,7 +168,7 @@ func (c *Client) newTokenRequest(mode Mode, v url.Values) (*http.Request, error)
 		}
 	}
 
-	req, err := http.NewRequest("POST", c.config.TokenURL, strings.NewReader(v.Encode()))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.config.TokenURL, strings.NewReader(v.Encode()))
 	if err != nil {
 		return nil, err
 	}
