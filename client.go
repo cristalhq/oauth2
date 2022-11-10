@@ -10,14 +10,12 @@ import (
 )
 
 // Client represents an OAuth2 HTTP client.
-//
 type Client struct {
 	client *http.Client
 	config Config
 }
 
 // NewClient instantiates a new client with a given config.
-//
 func NewClient(client *http.Client, config Config) *Client {
 	c := &Client{
 		client: client,
@@ -103,7 +101,7 @@ func (c *Client) CredentialsToken(ctx context.Context, username, password string
 // Token renews a token based on previous token.
 func (c *Client) Token(ctx context.Context, refreshToken string) (*Token, error) {
 	if refreshToken == "" {
-		return nil, errors.New("oauth2: refresh token is not set")
+		return nil, errors.New("refresh token is not set")
 	}
 
 	params := url.Values{
@@ -144,10 +142,12 @@ func (c *Client) doRequest(ctx context.Context, mode Mode, params url.Values) (*
 	if err != nil {
 		return nil, err
 	}
+
 	resp, err := c.client.Do(req)
 	if err != nil {
 		return nil, err
 	}
+
 	token, err := parseResponse(resp)
 	if err != nil {
 		return nil, err

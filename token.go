@@ -9,7 +9,6 @@ import (
 
 // Token represents the credentials used to authorize the requests to access
 // protected resources on the OAuth 2.0 provider's backend.
-//
 type Token struct {
 	AccessToken  string      `json:"access_token"`            // AccessToken is the token that authorizes and authenticates the requests.
 	TokenType    string      `json:"token_type,omitempty"`    // TokenType is the type of token. The Type method returns either this or "Bearer".
@@ -68,7 +67,6 @@ func (t *Token) Extra(key string) interface{} {
 }
 
 // Valid reports whether t is non-nil, has an AccessToken, and is not expired.
-//
 func (t *Token) Valid() bool {
 	return t != nil && t.AccessToken != "" && !t.IsExpired()
 }
@@ -82,7 +80,6 @@ var timeNow = time.Now
 const expiryDelta = 10 * time.Second
 
 // IsExpired reports whether the token is expired.
-//
 func (t *Token) IsExpired() bool {
 	if t.Expiry.IsZero() {
 		return false

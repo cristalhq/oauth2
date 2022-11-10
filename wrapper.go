@@ -7,7 +7,6 @@ import (
 // Wrap adds an additional header to the given http.Client.
 // The header will be `Authorization`.
 // All the params cannot be empty or nil.
-//
 func Wrap(header, value string, c *http.Client) (*http.Client, error) {
 	transport := http.DefaultTransport
 	if c.Transport != nil {

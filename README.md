@@ -6,7 +6,7 @@
 [![coverage-img]][coverage-url]
 [![version-img]][version-url]
 
-OAuth2 client in Go.
+OAuth2 client for Go.
 
 ## Features
 
@@ -40,13 +40,13 @@ client := oauth2.NewClient(http.DefaultClient, config)
 
 // url to fetch the code
 url := client.AuthCodeURL("state")
-fmt.Printf("Visit the URL for the auth dialog: %v", url)
+fmt.Printf("Visit the URL with the auth dialog: %v", url)
 
 // Use the authorization code that is pushed to the redirect URL.
 // Exchange will do the handshake to retrieve the initial access token.
 var code string
 if _, err := fmt.Scan(&code); err != nil {
-    log.Fatal(err)
+    panic(err)
 }
 
 // get a token
@@ -61,6 +61,8 @@ var _ string = token.RefreshToken // token for a refresh
 var _ time.Time = token.Expiry    // token expiration time
 var _ bool = token.IsExpired()    // have token expired?
 ```
+
+Also see examples: [example_test.go](https://github.com/cristalhq/oauth2/blob/main/example_test.go).
 
 ## Documentation
 
