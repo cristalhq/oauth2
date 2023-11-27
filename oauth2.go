@@ -9,6 +9,8 @@ type Config struct {
 	Mode         Mode     // Mode represents how tokens are represented in requests.
 	RedirectURL  string   // RedirectURL is the URL to redirect users going through the OAuth flow.
 	Scopes       []string // Scope specifies optional requested permissions.
+
+	_ struct{} // enforce explicit field names.
 }
 
 // Mode represents how requests for tokens are authenticated to the server.
