@@ -21,7 +21,6 @@ func TestWrap(t *testing.T) {
 
 	c := &http.Client{Timeout: 5 * time.Second}
 	wc, err := Wrap("Authorization", apikey, c)
-
 	if err != nil {
 		t.Fatal(err)
 	}
