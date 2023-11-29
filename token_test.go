@@ -30,26 +30,23 @@ func TestTokenTypeMethod(t *testing.T) {
 func TestTokenExtra(t *testing.T) {
 	const wantKey = "extra-key"
 
-	f := func(key string, value, want interface{}) {
-		t.Helper()
-
-		extra := map[string]interface{}{
-			key: value,
-		}
-		token := &Token{
-			Raw: extra,
-		}
-
-		got := token.Extra(wantKey)
-		if got != want {
-			t.Errorf("Extra(%q) = %q; want %q", key, got, want)
-		}
+	testCases := []struct {
+		key   string
+		value any
+		want  any
+	}{
+		{wantKey, "abc", "abc"},
+		{wantKey, 123, 123},
+		{wantKey, "", ""},
+		{wantKey, "def", nil},
 	}
 
-	f("extra-key", "abc", "abc")
-	f("extra-key", 123, 123)
-	f("extra-key", "", "")
-	f("other-key", "def", nil)
+	for _, tc := range testCases {
+		token := &Token{Raw: map[string]any{
+			tc.key: tc.value,
+		}}
+		mustEqual(t, token.Extra(wantKey), tc.want)
+	}
 }
 
 func TestTokenExpiry(t *testing.T) {
