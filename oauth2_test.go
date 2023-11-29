@@ -3,6 +3,7 @@ package oauth2
 import (
 	"net/http"
 	"net/url"
+	"reflect"
 	"testing"
 )
 
@@ -11,9 +12,7 @@ func TestAuthCodeURL(t *testing.T) {
 		client := NewClient(http.DefaultClient, cfg)
 
 		url := client.AuthCodeURL(state)
-		if url != want {
-			t.Errorf("got %q; want %q", url, want)
-		}
+		mustEqual(t, url, want)
 	}
 
 	f(
@@ -71,9 +70,7 @@ func TestAuthCodeURLWithParams(t *testing.T) {
 		client := NewClient(http.DefaultClient, cfg)
 
 		url := client.AuthCodeURLWithParams(state, params)
-		if url != want {
-			t.Errorf("got %q; want %q", url, want)
-		}
+		mustEqual(t, url, want)
 	}
 
 	f(
@@ -131,4 +128,25 @@ func TestAuthCodeURLWithParams(t *testing.T) {
 		nil,
 		`server:1234/auth-url?client_id=CLIENT_ID&response_type=code`,
 	)
+}
+
+func mustOk(tb testing.TB, err error) {
+	tb.Helper()
+	if err != nil {
+		tb.Fatal(err)
+	}
+}
+
+func mustFail(tb testing.TB, err error) {
+	tb.Helper()
+	if err == nil {
+		tb.Fatal()
+	}
+}
+
+func mustEqual[T any](tb testing.TB, have, want T) {
+	tb.Helper()
+	if !reflect.DeepEqual(have, want) {
+		tb.Fatalf("\nhave: %+v\nwant: %+v\n", have, want)
+	}
 }
