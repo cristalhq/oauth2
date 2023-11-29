@@ -435,7 +435,7 @@ func TestRetrieveTokenWithContexts(t *testing.T) {
 
 	ts := newServer(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		_, _ = io.WriteString(w, `{"access_token": "ACCESS_TOKEN", "token_type": "bearer"}`)
+		fmt.Fprint(w, `{"access_token": "ACCESS_TOKEN", "token_type": "bearer"}`)
 	})
 	defer ts.Close()
 
