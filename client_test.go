@@ -13,75 +13,43 @@ import (
 
 func TestExchangeRequest(t *testing.T) {
 	ts := newServer(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.String() != "/token" {
-			t.Errorf("Unexpected exchange request URL %q", r.URL)
-		}
+		mustEqual(t, r.URL.String(), "/token")
 
 		headerAuth := r.Header.Get("Authorization")
-		if want := "Basic Q0xJRU5UX0lEOkNMSUVOVF9TRUNSRVQ="; headerAuth != want {
-			t.Errorf("Unexpected authorization header %q, want %q", headerAuth, want)
-		}
+		mustEqual(t, headerAuth, "Basic Q0xJRU5UX0lEOkNMSUVOVF9TRUNSRVQ=")
 
 		headerContentType := r.Header.Get("Content-Type")
-		if headerContentType != "application/x-www-form-urlencoded" {
-			t.Errorf("Unexpected Content-Type header %q", headerContentType)
-		}
+		mustEqual(t, headerContentType, "application/x-www-form-urlencoded")
 
 		body, err := io.ReadAll(r.Body)
-		if err != nil {
-			t.Errorf("Failed reading request body: %s.", err)
-		}
-
-		if string(body) != "code=exchange-code&grant_type=authorization_code&redirect_uri=REDIRECT_URL" {
-			t.Errorf("Unexpected exchange payload; got %q", body)
-		}
+		mustOk(t, err)
+		mustEqual(t, string(body), "code=exchange-code&grant_type=authorization_code&redirect_uri=REDIRECT_URL")
 
 		w.Header().Set("Content-Type", "application/x-www-form-urlencoded")
-		_, _ = w.Write([]byte("access_token=90d64460d14870c08c81352a05dedd3465940a7c&scope=user&token_type=bearer"))
+		fmt.Fprint(w, "access_token=90d64460d14870c08c81352a05dedd3465940a7c&scope=user&token_type=bearer")
 	})
 	defer ts.Close()
 
 	client := newClient(ts.URL)
 	tok, err := client.Exchange(context.Background(), "exchange-code")
-	if err != nil {
-		t.Error(err)
-	}
-	if !tok.Valid() {
-		t.Fatalf("Token invalid. Got: %#v", tok)
-	}
-	if tok.AccessToken != "90d64460d14870c08c81352a05dedd3465940a7c" {
-		t.Errorf("Unexpected access token, %#v.", tok.AccessToken)
-	}
-	if tok.TokenType != "bearer" {
-		t.Errorf("Unexpected token type, %#v.", tok.TokenType)
-	}
-	scope := tok.Extra("scope")
-	if scope != "user" {
-		t.Errorf("Unexpected value for scope: %v", scope)
-	}
+	mustOk(t, err)
+	mustEqual(t, tok.Valid(), true)
+	mustEqual(t, tok.AccessToken, "90d64460d14870c08c81352a05dedd3465940a7c")
+	mustEqual(t, tok.TokenType, "bearer")
+	mustEqual(t, tok.Extra("scope"), "user")
 }
 
 func TestClientExchangeWithParams(t *testing.T) {
 	ts := newServer(func(w http.ResponseWriter, r *http.Request) {
-		got := r.Header.Get("Authorization")
-
-		want := "Basic Q0xJRU5UX0lEJTNGJTNGOkNMSUVOVF9TRUNSRVQlM0YlM0Y="
-		if got != want {
-			t.Errorf("Authorization header = %q; want %q", got, want)
-		}
+		headerAuth := r.Header.Get("Authorization")
+		mustEqual(t, headerAuth, "Basic Q0xJRU5UX0lEJTNGJTNGOkNMSUVOVF9TRUNSRVQlM0YlM0Y=")
 
 		body, err := io.ReadAll(r.Body)
-		if err != nil {
-			t.Errorf("Failed reading request body: %s.", err)
-		}
-
-		want = "code=exchange-code&foo=bar&grant_type=authorization_code&redirect_uri=REDIRECT_URL"
-		if string(body) != want {
-			t.Errorf("got %v want %v", string(body), want)
-		}
+		mustOk(t, err)
+		mustEqual(t, string(body), "code=exchange-code&foo=bar&grant_type=authorization_code&redirect_uri=REDIRECT_URL")
 
 		w.Header().Set("Content-Type", "application/x-www-form-urlencoded")
-		_, _ = w.Write([]byte("access_token=90d64460d14870c08c81352a05dedd3465940a7c&scope=user&token_type=bearer"))
+		fmt.Fprint(w, "access_token=90d64460d14870c08c81352a05dedd3465940a7c&scope=user&token_type=bearer")
 	})
 	defer ts.Close()
 
@@ -94,80 +62,64 @@ func TestClientExchangeWithParams(t *testing.T) {
 		TokenURL:     ts.URL + "/token",
 	})
 
-	_, err := client.ExchangeWithParams(context.Background(), "exchange-code", url.Values{"foo": {"bar"}})
-	if err != nil {
-		t.Error(err)
-	}
+	_, err := client.ExchangeWithParams(
+		context.Background(),
+		"exchange-code",
+		url.Values{"foo": {"bar"}},
+	)
+	mustOk(t, err)
 }
 
 func TestExchangeRequest_BadResponse(t *testing.T) {
 	ts := newServer(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		_, _ = w.Write([]byte(`{"scope": "user", "token_type": "bearer"}`))
+		fmt.Fprint(w, `{"scope": "user", "token_type": "bearer"}`)
 	})
 	defer ts.Close()
 
 	client := newClient(ts.URL)
 	_, err := client.Exchange(context.Background(), "code")
-	if err == nil {
-		t.Error("expected error from missing access_token")
-	}
+	mustFail(t, err)
 }
 
 func TestExchangeRequest_BadResponseType(t *testing.T) {
 	ts := newServer(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		_, _ = w.Write([]byte(`{"access_token":123, "scope": "user", "token_type": "bearer"}`))
+		fmt.Fprint(w, `{"access_token":123, "scope": "user", "token_type": "bearer"}`)
 	})
 	defer ts.Close()
 
 	client := newClient(ts.URL)
 	_, err := client.Exchange(context.Background(), "exchange-code")
-	if err == nil {
-		t.Error("expected error from non-string access_token")
-	}
+	mustFail(t, err)
 }
 
 func TestTokenRetrieveError(t *testing.T) {
 	ts := newServer(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.String() != "/token" {
-			t.Errorf("Unexpected token refresh request URL, %v is found.", r.URL)
-		}
+		mustEqual(t, r.URL.String(), "/token")
 
 		w.Header().Set("Content-type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
-		_, _ = w.Write([]byte(`{"error": "invalid_grant"}`))
+		fmt.Fprint(w, `{"error": "invalid_grant"}`)
 	})
 	defer ts.Close()
 
 	conf := newClient(ts.URL)
 	_, err := conf.Exchange(context.Background(), "exchange-code")
-	if err == nil {
-		t.Fatalf("got no error, expected one")
-	}
+	mustFail(t, err)
 
 	expected := fmt.Sprintf("oauth2: cannot fetch token: %v\nResponse: %s", "400 Bad Request", `{"error": "invalid_grant"}`)
-	if errStr := err.Error(); errStr != expected {
-		t.Fatalf("got %#v, expected %#v", errStr, expected)
-	}
+	mustEqual(t, err.Error(), expected)
 }
 
 func TestRetrieveToken_InParams(t *testing.T) {
 	const clientID = "client-id"
 	ts := newServer(func(w http.ResponseWriter, r *http.Request) {
-		got := r.FormValue("client_id")
-		want := clientID
-		if got != want {
-			t.Errorf("client_id = %q; want %q", got, want)
-		}
+		mustEqual(t, r.FormValue("client_id"), clientID)
+		mustEqual(t, r.FormValue("client_secret"), "")
 
-		got = r.FormValue("client_secret")
-		want = ""
-		if got != want {
-			t.Errorf("client_secret = %q; want empty", got)
-		}
 		w.Header().Set("Content-Type", "application/json")
-		_, _ = io.WriteString(w, `{"access_token": "ACCESS_TOKEN", "token_type": "bearer"}`)
+		fmt.Fprint(w, `{"access_token": "ACCESS_TOKEN", "token_type": "bearer"}`)
 	})
 	defer ts.Close()
 
@@ -179,9 +131,7 @@ func TestRetrieveToken_InParams(t *testing.T) {
 	})
 
 	_, err := client.Exchange(context.Background(), "nil")
-	if err != nil {
-		t.Errorf("RetrieveToken = %v; want no error", err)
-	}
+	mustOk(t, err)
 }
 
 func TestRetrieveToken_InHeaderMode(t *testing.T) {
@@ -190,19 +140,12 @@ func TestRetrieveToken_InHeaderMode(t *testing.T) {
 
 	ts := newServer(func(w http.ResponseWriter, r *http.Request) {
 		user, pass, ok := r.BasicAuth()
-		if !ok {
-			t.Error("expected with HTTP Basic Authentication")
-		}
-
-		if user != clientID {
-			t.Errorf("client_id = %q; want %q", user, clientID)
-		}
-		if pass != clientSecret {
-			t.Errorf("client_secret = %q; want %q", pass, clientSecret)
-		}
+		mustEqual(t, ok, true)
+		mustEqual(t, user, clientID)
+		mustEqual(t, pass, clientSecret)
 
 		w.Header().Set("Content-Type", "application/json")
-		_, _ = io.WriteString(w, `{"access_token": "ACCESS_TOKEN", "token_type": "bearer"}`)
+		fmt.Fprint(w, `{"access_token": "ACCESS_TOKEN", "token_type": "bearer"}`)
 	})
 	defer ts.Close()
 
@@ -214,9 +157,7 @@ func TestRetrieveToken_InHeaderMode(t *testing.T) {
 	})
 
 	_, err := client.Exchange(context.Background(), "nil")
-	if err != nil {
-		t.Errorf("RetrieveToken = %v; want no error", err)
-	}
+	mustOk(t, err)
 }
 
 func TestRetrieveToken_AutoDetect(t *testing.T) {
@@ -224,21 +165,16 @@ func TestRetrieveToken_AutoDetect(t *testing.T) {
 	const clientSecret = "client-secret"
 
 	ts := newServer(func(w http.ResponseWriter, r *http.Request) {
-		got := r.FormValue("client_id")
-		want := clientID
-		if got != want {
+		if r.FormValue("client_id") != clientID {
 			w.WriteHeader(http.StatusInternalServerError)
-			_, _ = io.WriteString(w, `{"access_token": "ACCESS_TOKEN", "token_type": "bearer"}`)
+			fmt.Fprint(w, `{"access_token": "ACCESS_TOKEN", "token_type": "bearer"}`)
 			return
 		}
 
-		got = r.FormValue("client_secret")
-		want = clientSecret
-		if got != want {
-			t.Errorf("client_secret = %q; want empty", got)
-		}
+		mustEqual(t, r.FormValue("client_secret"), clientSecret)
+
 		w.Header().Set("Content-Type", "application/json")
-		_, _ = io.WriteString(w, `{"access_token": "ACCESS_TOKEN", "token_type": "bearer"}`)
+		fmt.Fprint(w, `{"access_token": "ACCESS_TOKEN", "token_type": "bearer"}`)
 	})
 	defer ts.Close()
 
@@ -250,153 +186,85 @@ func TestRetrieveToken_AutoDetect(t *testing.T) {
 	})
 
 	_, err := client.Exchange(context.Background(), "test")
-	if err != nil {
-		t.Errorf("RetrieveToken = %v; want no error", err)
-	}
+	mustOk(t, err)
 }
 
 func TestExchangeRequest_WithParams(t *testing.T) {
 	ts := newServer(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.String() != "/token" {
-			t.Errorf("Unexpected exchange request URL, %v is found.", r.URL)
-		}
+		mustEqual(t, r.URL.String(), "/token")
 
 		headerAuth := r.Header.Get("Authorization")
-		if headerAuth != "Basic Q0xJRU5UX0lEOkNMSUVOVF9TRUNSRVQ=" {
-			t.Errorf("Unexpected authorization header, %v is found.", headerAuth)
-		}
+		mustEqual(t, headerAuth, "Basic Q0xJRU5UX0lEOkNMSUVOVF9TRUNSRVQ=")
 
 		headerContentType := r.Header.Get("Content-Type")
-		if headerContentType != "application/x-www-form-urlencoded" {
-			t.Errorf("Unexpected Content-Type header, %v is found.", headerContentType)
-		}
+		mustEqual(t, headerContentType, "application/x-www-form-urlencoded")
 
 		body, err := io.ReadAll(r.Body)
-		if err != nil {
-			t.Errorf("Failed reading request body: %s.", err)
-		}
-		if string(body) != "code=exchange-code&foo=bar&grant_type=authorization_code&redirect_uri=REDIRECT_URL" {
-			t.Errorf("Unexpected exchange payload, %v is found.", string(body))
-		}
+		mustOk(t, err)
+		mustEqual(t, string(body), "code=exchange-code&foo=bar&grant_type=authorization_code&redirect_uri=REDIRECT_URL")
+
 		w.Header().Set("Content-Type", "application/x-www-form-urlencoded")
-		_, _ = w.Write([]byte("access_token=ProperToken&scope=user&token_type=bearer"))
+		fmt.Fprint(w, "access_token=ProperToken&scope=user&token_type=bearer")
 	})
 	defer ts.Close()
 
 	client := newClient(ts.URL)
 
 	tok, err := client.ExchangeWithParams(context.Background(), "exchange-code", url.Values{"foo": {"bar"}})
-	if err != nil {
-		t.Error(err)
-	}
-	if !tok.Valid() {
-		t.Fatalf("Token invalid. Got: %#v", tok)
-	}
-	if tok.AccessToken != "ProperToken" {
-		t.Errorf("Unexpected access token, %#v.", tok.AccessToken)
-	}
-	if tok.TokenType != "bearer" {
-		t.Errorf("Unexpected token type, %#v.", tok.TokenType)
-	}
-	scope := tok.Extra("scope")
-	if scope != "user" {
-		t.Errorf("Unexpected value for scope: %v", scope)
-	}
+	mustOk(t, err)
+	mustEqual(t, tok.Valid(), true)
+	mustEqual(t, tok.AccessToken, "ProperToken")
+	mustEqual(t, tok.TokenType, "bearer")
+	mustEqual(t, tok.Extra("scope"), "user")
 }
 
 func TestExchangeRequest_JSONResponse(t *testing.T) {
 	ts := newServer(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.String() != "/token" {
-			t.Errorf("Unexpected exchange request URL, %v is found.", r.URL)
-		}
+		mustEqual(t, r.URL.String(), "/token")
 
 		headerAuth := r.Header.Get("Authorization")
-		if headerAuth != "Basic Q0xJRU5UX0lEOkNMSUVOVF9TRUNSRVQ=" {
-			t.Errorf("Unexpected authorization header, %v is found.", headerAuth)
-		}
+		mustEqual(t, headerAuth, "Basic Q0xJRU5UX0lEOkNMSUVOVF9TRUNSRVQ=")
 
 		headerContentType := r.Header.Get("Content-Type")
-		if headerContentType != "application/x-www-form-urlencoded" {
-			t.Errorf("Unexpected Content-Type header, %v is found.", headerContentType)
-		}
+		mustEqual(t, headerContentType, "application/x-www-form-urlencoded")
 
 		body, err := io.ReadAll(r.Body)
-		if err != nil {
-			t.Errorf("Failed reading request body: %s.", err)
-		}
-
-		if string(body) != "code=exchange-code&grant_type=authorization_code&redirect_uri=REDIRECT_URL" {
-			t.Errorf("Unexpected exchange payload, %v is found.", string(body))
-		}
+		mustOk(t, err)
+		mustEqual(t, string(body), "code=exchange-code&grant_type=authorization_code&redirect_uri=REDIRECT_URL")
 
 		w.Header().Set("Content-Type", "application/json")
-		_, _ = w.Write([]byte(`{"access_token": "ProperToken", "scope": "user", "token_type": "bearer", "expires_in": 86400}`))
+		fmt.Fprint(w, `{"access_token": "ProperToken", "scope": "user", "token_type": "bearer", "expires_in": 86400}`)
 	})
 	defer ts.Close()
 
 	client := newClient(ts.URL)
 
 	tok, err := client.Exchange(context.Background(), "exchange-code")
-	if err != nil {
-		t.Error(err)
-	}
-
-	if !tok.Valid() {
-		t.Fatalf("Token invalid. Got: %#v", tok)
-	}
-
-	if tok.AccessToken != "ProperToken" {
-		t.Errorf("Unexpected access token, %#v.", tok.AccessToken)
-	}
-
-	if tok.TokenType != "bearer" {
-		t.Errorf("Unexpected token type, %#v.", tok.TokenType)
-	}
-
-	scope := tok.Extra("scope")
-	if scope != "user" {
-		t.Errorf("Unexpected value for scope: %v", scope)
-	}
-
-	expiresIn := tok.Extra("expires_in")
-	if expiresIn != float64(86400) {
-		t.Errorf("Unexpected non-numeric value for expires_in: %v", expiresIn)
-	}
+	mustOk(t, err)
+	mustEqual(t, tok.Valid(), true)
+	mustEqual(t, tok.AccessToken, "ProperToken")
+	mustEqual(t, tok.TokenType, "bearer")
+	mustEqual(t, tok.Extra("scope"), "user")
+	mustEqual(t, tok.Extra("expires_in").(float64), float64(86400))
 }
 
 func TestExchangeRequest_JSONResponse_Expiry(t *testing.T) {
-	seconds := int32((24 * time.Hour).Seconds())
-
-	f := func(expires string, want, nullExpires bool) {
-		t.Helper()
-
-		testExchangeRequestJSONResponseExpiry(t, expires, want, nullExpires)
+	testCases := []struct {
+		expires     string
+		want        bool
+		nullExpires bool
+	}{
+		{`"expires_in": 86400`, true, false},
+		{`"expires_in": "86400"`, true, false},
+		{`"expires_in": null`, true, true},
+		{`"expires_in": false`, false, false},
+		{`"expires_in": {}`, false, false},
+		{`"expires_in": "zzz"`, false, false},
 	}
 
-	f(
-		fmt.Sprintf(`"expires_in": %d`, seconds),
-		true, false,
-	)
-	f(
-		fmt.Sprintf(`"expires_in": "%d"`, seconds),
-		true, false,
-	)
-	f(
-		`"expires_in": null`,
-		true, true,
-	)
-	f(
-		`"expires_in": false`,
-		false, false,
-	)
-	f(
-		`"expires_in": {}`,
-		false, false,
-	)
-	f(
-		`"expires_in": "zzz"`,
-		false, false,
-	)
+	for _, tc := range testCases {
+		testExchangeRequestJSONResponseExpiry(t, tc.expires, tc.want, tc.nullExpires)
+	}
 }
 
 func testExchangeRequestJSONResponseExpiry(t *testing.T, exp string, want, nullExpires bool) {
@@ -422,9 +290,7 @@ func testExchangeRequestJSONResponseExpiry(t *testing.T, exp string, want, nullE
 	if !want {
 		return
 	}
-	if !tok.Valid() {
-		t.Fatalf("Token invalid. Got: %#v", tok)
-	}
+	mustEqual(t, tok.Valid(), true)
 	expiry := tok.Expiry
 
 	if nullExpires && expiry.IsZero() {
@@ -437,57 +303,29 @@ func testExchangeRequestJSONResponseExpiry(t *testing.T, exp string, want, nullE
 
 func TestPasswordCredentialsTokenRequest(t *testing.T) {
 	ts := newServer(func(w http.ResponseWriter, r *http.Request) {
-		defer r.Body.Close()
-		expected := "/token"
-		if r.URL.String() != expected {
-			t.Errorf("URL = %q; want %q", r.URL, expected)
-		}
+		mustEqual(t, r.URL.String(), "/token")
 
 		headerAuth := r.Header.Get("Authorization")
-		expected = "Basic Q0xJRU5UX0lEOkNMSUVOVF9TRUNSRVQ="
-		if headerAuth != expected {
-			t.Errorf("Authorization header = %q; want %q", headerAuth, expected)
-		}
+		mustEqual(t, headerAuth, "Basic Q0xJRU5UX0lEOkNMSUVOVF9TRUNSRVQ=")
 
 		headerContentType := r.Header.Get("Content-Type")
-		expected = "application/x-www-form-urlencoded"
-		if headerContentType != expected {
-			t.Errorf("Content-Type header = %q; want %q", headerContentType, expected)
-		}
+		mustEqual(t, headerContentType, "application/x-www-form-urlencoded")
 
 		body, err := io.ReadAll(r.Body)
-		if err != nil {
-			t.Errorf("Failed reading request body: %s.", err)
-		}
-
-		expected = "grant_type=password&password=password1&scope=scope1+scope2&username=user1"
-		if string(body) != expected {
-			t.Errorf("res.Body = %q; want %q", string(body), expected)
-		}
+		mustOk(t, err)
+		mustEqual(t, string(body), "grant_type=password&password=password1&scope=scope1+scope2&username=user1")
 
 		w.Header().Set("Content-Type", "application/x-www-form-urlencoded")
-		_, _ = w.Write([]byte("access_token=ProperToken&scope=user&token_type=bearer"))
+		fmt.Fprint(w, "access_token=ProperToken&scope=user&token_type=bearer")
 	})
 	defer ts.Close()
 
 	client := newClient(ts.URL)
 	tok, err := client.CredentialsToken(context.Background(), "user1", "password1")
-	if err != nil {
-		t.Error(err)
-	}
-	if !tok.Valid() {
-		t.Fatalf("Token invalid. Got: %#v", tok)
-	}
-
-	expected := "ProperToken"
-	if tok.AccessToken != expected {
-		t.Errorf("AccessToken = %q; want %q", tok.AccessToken, expected)
-	}
-
-	expected = "bearer"
-	if tok.TokenType != expected {
-		t.Errorf("TokenType = %q; want %q", tok.TokenType, expected)
-	}
+	mustOk(t, err)
+	mustEqual(t, tok.Valid(), true)
+	mustEqual(t, tok.AccessToken, "ProperToken")
+	mustEqual(t, tok.TokenType, "bearer")
 }
 
 // func TestTokenRefreshRequest(t *testing.T) {
@@ -495,9 +333,7 @@ func TestPasswordCredentialsTokenRequest(t *testing.T) {
 // 		if r.URL.String() == "/somethingelse" {
 // 			return
 // 		}
-// 		if r.URL.String() != "/token" {
-// 			t.Errorf("Unexpected token refresh request URL %q", r.URL)
-// 		}
+// 				mustEqual(t, r.URL.String(), "/token")
 // 		headerContentType := r.Header.Get("Content-Type")
 // 		if headerContentType != "application/x-www-form-urlencoded" {
 // 			t.Errorf("Unexpected Content-Type header %q", headerContentType)
@@ -520,9 +356,7 @@ func TestPasswordCredentialsTokenRequest(t *testing.T) {
 // 		if r.URL.String() == "/somethingelse" {
 // 			return
 // 		}
-// 		if r.URL.String() != "/token" {
-// 			t.Errorf("Unexpected token refresh request URL, %v is found.", r.URL)
-// 		}
+// 				mustEqual(t, r.URL.String(), "/token")
 // 		headerContentType := r.Header.Get("Content-Type")
 // 		if headerContentType != "application/x-www-form-urlencoded" {
 // 			t.Errorf("Unexpected Content-Type header, %v is found.", headerContentType)
@@ -552,9 +386,7 @@ func TestPasswordCredentialsTokenRequest(t *testing.T) {
 // 	conf := newConf(ts.URL)
 // 	tkr := conf.TokenSource(context.Background(), &Token{RefreshToken: "OLD_REFRESH_TOKEN"})
 // 	tk, err := tkr.Token()
-// 	if err != nil {
-// 		t.Errorf("got err = %v; want none", err)
-// 		return
+// 	mustOk(t, err)
 // 	}
 // 	if want := "NEW_REFRESH_TOKEN"; tk.RefreshToken != want {
 // 		t.Errorf("RefreshToken = %q; want %q", tk.RefreshToken, want)
@@ -572,9 +404,7 @@ func TestPasswordCredentialsTokenRequest(t *testing.T) {
 // 	const oldRefreshToken = "OLD_REFRESH_TOKEN"
 // 	tkr := conf.TokenSource(context.Background(), &Token{RefreshToken: oldRefreshToken})
 // 	tk, err := tkr.Token()
-// 	if err != nil {
-// 		t.Fatalf("got err = %v; want none", err)
-// 	}
+// 	mustOk(t, err)
 // 	if tk.RefreshToken != oldRefreshToken {
 // 		t.Errorf("RefreshToken = %q; want %q", tk.RefreshToken, oldRefreshToken)
 // 	}
@@ -595,13 +425,9 @@ func TestPasswordCredentialsTokenRequest(t *testing.T) {
 
 // 	c := conf.Client(context.Background(), tok)
 // 	req, err := http.NewRequest("GET", ts.URL, nil)
-// 	if err != nil {
-// 		t.Error(err)
-// 	}
+// 	mustOk(t, err)
 // 	_, err = c.Do(req)
-// 	if err != nil {
-// 		t.Error(err)
-// 	}
+// 	mustOk(t, err)
 // }
 
 func TestRetrieveTokenWithContexts(t *testing.T) {
@@ -609,7 +435,7 @@ func TestRetrieveTokenWithContexts(t *testing.T) {
 
 	ts := newServer(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		_, _ = io.WriteString(w, `{"access_token": "ACCESS_TOKEN", "token_type": "bearer"}`)
+		fmt.Fprint(w, `{"access_token": "ACCESS_TOKEN", "token_type": "bearer"}`)
 	})
 	defer ts.Close()
 
@@ -620,9 +446,7 @@ func TestRetrieveTokenWithContexts(t *testing.T) {
 		Mode:         AutoDetectMode,
 	})
 	_, err := client.retrieveToken(context.Background(), url.Values{})
-	if err != nil {
-		t.Errorf("RetrieveToken (with background context) = %v; want no error", err)
-	}
+	mustOk(t, err)
 
 	retrieved := make(chan struct{})
 	cancellingts := newServer(func(w http.ResponseWriter, r *http.Request) {
@@ -641,9 +465,7 @@ func TestRetrieveTokenWithContexts(t *testing.T) {
 	cancel()
 	_, err = client.retrieveToken(ctx, url.Values{})
 	close(retrieved)
-	if err == nil {
-		t.Errorf("RetrieveToken (with cancelled context) = nil; want error")
-	}
+	mustFail(t, err)
 }
 
 func newClient(url string) *Client {
