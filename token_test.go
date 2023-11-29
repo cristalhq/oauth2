@@ -38,7 +38,7 @@ func TestTokenExtra(t *testing.T) {
 		{wantKey, "abc", "abc"},
 		{wantKey, 123, 123},
 		{wantKey, "", ""},
-		{wantKey, "def", nil},
+		{"other-key", "def", nil},
 	}
 
 	for _, tc := range testCases {
