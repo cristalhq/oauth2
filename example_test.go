@@ -10,7 +10,7 @@ import (
 	"github.com/cristalhq/oauth2"
 )
 
-func ExampleClientAndConfig() {
+func Example() {
 	config := oauth2.Config{
 		ClientID:     "YOUR_CLIENT_ID",
 		ClientSecret: "YOUR_CLIENT_SECRET",

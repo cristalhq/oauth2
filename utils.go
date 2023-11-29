@@ -30,7 +30,7 @@ func parseResponse(resp *http.Response) (*Token, error) {
 	resp.Body.Close()
 
 	if err != nil {
-		return nil, fmt.Errorf("oauth2: cannot fetch token: %v", err)
+		return nil, fmt.Errorf("oauth2: cannot fetch token: %w", err)
 	}
 	if resp.StatusCode < 200 || resp.StatusCode > 299 {
 		return nil, fmt.Errorf("oauth2: cannot fetch token: %v %v\nResponse: %s",
@@ -109,11 +109,11 @@ type tokenJSON struct {
 	ExpiresIn    expirationTime `json:"expires_in"` // at least PayPal returns string, while most return number
 }
 
-func (e *tokenJSON) expiry() (t time.Time) {
+func (e *tokenJSON) expiry() time.Time {
 	if v := e.ExpiresIn; v != 0 {
 		return time.Now().Add(time.Duration(v) * time.Second)
 	}
-	return
+	return time.Time{}
 }
 
 type expirationTime int32

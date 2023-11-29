@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -28,7 +27,7 @@ func TestExchangeRequest(t *testing.T) {
 			t.Errorf("Unexpected Content-Type header %q", headerContentType)
 		}
 
-		body, err := ioutil.ReadAll(r.Body)
+		body, err := io.ReadAll(r.Body)
 		if err != nil {
 			t.Errorf("Failed reading request body: %s.", err)
 		}
@@ -71,7 +70,7 @@ func TestClientExchangeWithParams(t *testing.T) {
 			t.Errorf("Authorization header = %q; want %q", got, want)
 		}
 
-		body, err := ioutil.ReadAll(r.Body)
+		body, err := io.ReadAll(r.Body)
 		if err != nil {
 			t.Errorf("Failed reading request body: %s.", err)
 		}
@@ -228,7 +227,7 @@ func TestRetrieveToken_AutoDetect(t *testing.T) {
 		got := r.FormValue("client_id")
 		want := clientID
 		if got != want {
-			w.WriteHeader(500)
+			w.WriteHeader(http.StatusInternalServerError)
 			_, _ = io.WriteString(w, `{"access_token": "ACCESS_TOKEN", "token_type": "bearer"}`)
 			return
 		}
@@ -272,7 +271,7 @@ func TestExchangeRequest_WithParams(t *testing.T) {
 			t.Errorf("Unexpected Content-Type header, %v is found.", headerContentType)
 		}
 
-		body, err := ioutil.ReadAll(r.Body)
+		body, err := io.ReadAll(r.Body)
 		if err != nil {
 			t.Errorf("Failed reading request body: %s.", err)
 		}
@@ -321,7 +320,7 @@ func TestExchangeRequest_JSONResponse(t *testing.T) {
 			t.Errorf("Unexpected Content-Type header, %v is found.", headerContentType)
 		}
 
-		body, err := ioutil.ReadAll(r.Body)
+		body, err := io.ReadAll(r.Body)
 		if err != nil {
 			t.Errorf("Failed reading request body: %s.", err)
 		}
@@ -403,7 +402,7 @@ func TestExchangeRequest_JSONResponse_Expiry(t *testing.T) {
 func testExchangeRequestJSONResponseExpiry(t *testing.T, exp string, want, nullExpires bool) {
 	ts := newServer(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		_, _ = w.Write([]byte(fmt.Sprintf(`{"access_token": "90d", "scope": "user", "token_type": "bearer", %s}`, exp)))
+		fmt.Fprintf(w, `{"access_token": "90d", "scope": "user", "token_type": "bearer", %s}`, exp)
 	})
 	defer ts.Close()
 
@@ -456,7 +455,7 @@ func TestPasswordCredentialsTokenRequest(t *testing.T) {
 			t.Errorf("Content-Type header = %q; want %q", headerContentType, expected)
 		}
 
-		body, err := ioutil.ReadAll(r.Body)
+		body, err := io.ReadAll(r.Body)
 		if err != nil {
 			t.Errorf("Failed reading request body: %s.", err)
 		}
@@ -503,7 +502,7 @@ func TestPasswordCredentialsTokenRequest(t *testing.T) {
 // 		if headerContentType != "application/x-www-form-urlencoded" {
 // 			t.Errorf("Unexpected Content-Type header %q", headerContentType)
 // 		}
-// 		body, _ := ioutil.ReadAll(r.Body)
+// 		body, _ := io.ReadAll(r.Body)
 // 		if string(body) != "grant_type=refresh_token&refresh_token=REFRESH_TOKEN" {
 // 			t.Errorf("Unexpected refresh token payload %q", body)
 // 		}
@@ -528,7 +527,7 @@ func TestPasswordCredentialsTokenRequest(t *testing.T) {
 // 		if headerContentType != "application/x-www-form-urlencoded" {
 // 			t.Errorf("Unexpected Content-Type header, %v is found.", headerContentType)
 // 		}
-// 		body, _ := ioutil.ReadAll(r.Body)
+// 		body, _ := io.ReadAll(r.Body)
 // 		if string(body) != "client_id=CLIENT_ID&grant_type=refresh_token&refresh_token=REFRESH_TOKEN" {
 // 			t.Errorf("Unexpected refresh token payload, %v is found.", string(body))
 // 		}
